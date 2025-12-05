@@ -1,8 +1,5 @@
-use itertools::Itertools;
 
-// the input was two clear segments, so i split it up manually
-// instead of writing a disgusting regular expression
-const INPUT: &str = include_str!("../input");
+const INPUT: &str = include_str!("../res/test");
 
 fn solve_2(input: &str) -> u32 {
     0
