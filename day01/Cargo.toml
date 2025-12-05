@@ -1,0 +1,9 @@
+[package]
+name = "day01"
+authors = ["Kevin Kearney"]
+description = "Advent of Code 2025"
+edition = "2021"
+
+version = "0.1.0"
+
+[dependencies]
