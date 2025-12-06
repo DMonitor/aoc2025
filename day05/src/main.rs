@@ -36,8 +36,6 @@ fn consolidate_range(mut range_set: &mut RangeSet) -> u32
     let mut changed = 0;
     let mut g:RangeSet = RangeSet::new();
 
-
-
     for new_range in range_set.iter()
     {
         let contains_lower = g.iter().find(|x| x.contains(new_range.start())).cloned();
@@ -69,16 +67,11 @@ fn consolidate_range(mut range_set: &mut RangeSet) -> u32
             changed += 1;
         }
         else {
-                        g.insert(new_range.clone());
+            g.insert(new_range.clone());
         }
     }
 
     g.clone_into(range_set);
-    if changed > 0
-    {
-        println!("changed {}", changed);
-        return changed + consolidate_range(range_set);
-    }
 
     0
 
@@ -101,21 +94,8 @@ fn solve_2() -> u64 {
 
     let mut sum = 0;
 
-    consolidate_range(&mut g);
-
-    let mut x = g.into_iter().collect::<Vec<RangeInclusive<u64>>>();
-    x.sort_by(|r1,r2| r1.start().cmp(r2.start()));
-
-    let mut last_max = 0;
-
-    for r in x
+    for r in g
     {
-        if(*r.start() < last_max)
-        {
-            println!(">>>{last_max} has a problem<<<")
-        }
-        last_max = *r.end();
-        println!("{}-{}\t{}", r.start(), r.end(),r.clone().count());
         sum += r.clone().count()
     }
 
@@ -136,6 +116,6 @@ fn solve_1() -> u64 {
 
 fn main()
 {
-    //println!("{}", solve_1());
+    println!("{}", solve_1());
     println!("{}", solve_2());
 }
