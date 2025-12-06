@@ -31,49 +31,43 @@ fn get_pantry() -> Vec<u64>
             s.parse::<u64>().unwrap()).collect::<Vec<u64>>()
 }
 
-fn consolidate_range(mut range_set: &mut RangeSet) -> u32
+fn consolidate_range(range_set: &mut RangeSet)
 {
-    let mut changed = 0;
     let mut g:RangeSet = RangeSet::new();
-
     for new_range in range_set.iter()
     {
         let contains_lower = g.iter().find(|x| x.contains(new_range.start())).cloned();
         let contains_upper = g.iter().find(|x| x.contains(new_range.end())).cloned();
 
-        if contains_lower.is_some() && contains_upper.is_some()
+        match (contains_lower, contains_upper)
         {
-            let s = *contains_lower.clone().unwrap().start();
-            let e = *contains_upper.clone().unwrap().end();
-            g.remove(&contains_upper.unwrap());
-            g.remove(&contains_lower.unwrap());
-            g.insert(RangeInclusive::new(s, e));
-            changed += consolidate_range(&mut g);
-        }
-        else if contains_lower.is_some()
-        {
-            let s = *contains_lower.clone().unwrap().start();
-            let e = u64::max(*new_range.end(),*contains_lower.clone().unwrap().end());
-            g.remove(&contains_lower.unwrap());
-            g.insert(RangeInclusive::new(s, e));
-            changed += 1;
-        }
-        else if contains_upper.is_some()
-        {
-            let s = u64::min(*new_range.start(),*contains_upper.clone().unwrap().start());
-            let e = *contains_upper.clone().unwrap().end();
-            g.remove(&contains_upper.unwrap());
-            g.insert(RangeInclusive::new(s,e));
-            changed += 1;
-        }
-        else {
-            g.insert(new_range.clone());
+            (Some(lower), Some(upper)) => {
+                let s = *lower.start();
+                let e = *lower.end();
+                g.remove(&upper);
+                g.remove(&upper);
+                g.insert(RangeInclusive::new(s, e));
+                consolidate_range(&mut g);
+            }
+            (Some(lower), None) => {
+                let s = *lower.start();
+                let e = u64::max(*new_range.end(),*lower.end());
+                g.remove(&lower);
+                g.insert(RangeInclusive::new(s, e));
+            }
+            (None, Some(upper)) => {
+                let s = u64::min(*new_range.start(),*upper.start());
+                let e = *upper.end();
+                g.remove(&upper);
+                g.insert(RangeInclusive::new(s,e));
+            }
+            (None, None) => {
+                g.insert(new_range.clone());
+            }
         }
     }
 
     g.clone_into(range_set);
-
-    0
 
 }
 
