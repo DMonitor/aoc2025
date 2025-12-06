@@ -43,9 +43,9 @@ fn consolidate_range(range_set: &mut RangeSet)
         {
             (Some(lower), Some(upper)) => {
                 let s = *lower.start();
-                let e = *lower.end();
+                let e = *upper.end();
                 g.remove(&upper);
-                g.remove(&upper);
+                g.remove(&lower);
                 g.insert(RangeInclusive::new(s, e));
                 consolidate_range(&mut g);
             }
