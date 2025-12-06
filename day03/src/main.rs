@@ -1,4 +1,3 @@
-use std::ops::Index;
 
 const INPUT: &str = include_str!("../res/input");
 

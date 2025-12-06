@@ -1,4 +1,3 @@
-use std::path::absolute;
 
 const INPUT: &str = include_str!("../res/input");
 
