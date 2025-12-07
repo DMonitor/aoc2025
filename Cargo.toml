@@ -13,7 +13,7 @@ unsafe_code = "forbid"
 
 [workspace.package]
 authors = ["Kevin Kearney"]
-description = "Advent of Code 2024"
+description = "Advent of Code 2025"
 edition = "2021"
 
 version = "0.1.0"
