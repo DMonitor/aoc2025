@@ -17,7 +17,65 @@ fn parse_input(input:&str) -> HashSet<Point>
 }
 
 fn solve_2(input: &str) -> u64 {
-    0
+    let point_map = parse_input(input);
+
+    let mut relations:Vec<(Point, Point, i64)> =
+        point_map.iter().map( |point|
+            point_map
+                .iter()
+                .map(|p| (p,p.distance(*point)))
+                .filter(|p| p.1 != 0)
+                .map(|p| (point.clone(),*p.0,p.1)).collect::<Vec<(Point, Point, i64)>>())
+            .flatten().collect();
+
+    // sorted with closest at the bottom
+    relations.sort_by(|a,b| b.2.cmp(&a.2));
+
+    let goal = point_map.len();
+
+    // each circuit having 2 cells is a fair assumption
+    let mut circuits = Vec::<HashSet<Point>>::with_capacity(goal /2);
+
+    let (mut x, mut y):(Point,Point) = (Point {x:0,y:0,z:0},Point {x:0,y:0,z:0});
+
+    while !circuits.iter().any(|c| c.len() >= goal)
+    {
+        let close = relations.pop().unwrap();
+        x = close.0;
+        y = close.1;
+        relations.pop();
+        let mut neighbor_circuits = circuits.iter_mut().filter( |c| c.contains(&close.0) || c.contains(&close.1)).collect::<Vec<&mut HashSet<Point>>>();
+
+        //println!("{} {}", close.0, close.1);
+        match neighbor_circuits.len()
+        {
+            0 => {
+                println!("new");
+                // make a new circuit
+                let mut new_circuit:HashSet<Point> = HashSet::new();
+                new_circuit.insert(close.0);
+                new_circuit.insert(close.1);
+                circuits.push(new_circuit);
+            }
+            1 => {
+                // add to circuit
+                neighbor_circuits[0].insert(close.0);
+                neighbor_circuits[0].insert(close.1);
+            }
+            2 => {
+                println!("merge");
+                // merge two circuits
+                let (circuit1,circuit2) = neighbor_circuits.split_at_mut(1);
+                circuit1[0].extend(circuit2[0].iter());
+                circuit2[0].clear();
+            }
+            _ => unreachable!()
+        }
+
+    }
+
+    (x.x * y.x) as u64
+
 }
 
 fn solve_1(input: &str) -> u64 {
@@ -43,7 +101,7 @@ fn solve_1(input: &str) -> u64 {
     // sorted with closest at the bottom
     relations.sort_by(|a,b| b.2.cmp(&a.2));
 
-    const LINKS:usize = 1000;
+    const LINKS:usize = 10;
 
     // each circuit having 2 cells is a fair assumption
     let mut circuits = Vec::<HashSet<Point>>::with_capacity(LINKS/2);
@@ -55,10 +113,10 @@ fn solve_1(input: &str) -> u64 {
         relations.pop();
         let mut neighbor_circuits = circuits.iter_mut().filter( |c| c.contains(&close.0) || c.contains(&close.1)).collect::<Vec<&mut HashSet<Point>>>();
 
+        println!("{} {}", close.0, close.1);
         match neighbor_circuits.len()
         {
             0 => {
-                println!("{} {}", close.0, close.1);
                 println!("new");
                 // make a new circuit
                 let mut new_circuit:HashSet<Point> = HashSet::new();
@@ -74,7 +132,6 @@ fn solve_1(input: &str) -> u64 {
                 made_links += 1;
             }
             2 => {
-                println!("{} {}", close.0, close.1);
                 println!("merge");
                 // merge two circuits
                 let (circuit1,circuit2) = neighbor_circuits.split_at_mut(1);
@@ -114,6 +171,6 @@ fn solve_1(input: &str) -> u64 {
 
 fn main()
 {
-    println!("{}", solve_1(INPUT));
+    //println!("{}", solve_1(INPUT));
     println!("{}", solve_2(INPUT));
 }
