@@ -9,9 +9,9 @@ pub struct Point
 
 impl Point
 {
-    pub fn distance(self, other:Point) -> f64
+    pub fn distance(self, other:Point) -> i64
     {
-        (((self.x - other.x) as f64).powf(2f64) + ((self.y - other.y) as f64).powf(2f64) + ((self.z - other.z) as f64).powf(2f64)).sqrt()
+        (self.x - other.x).pow(2) + (self.y - other.y).pow(2) + (self.z - other.z).pow(2)
     }
 }
 
