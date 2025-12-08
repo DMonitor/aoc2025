@@ -29,14 +29,12 @@ fn solve_1(input: &str) -> u64 {
     for point in point_map.iter()
     {
         let me = point.clone();
-        let closest =
-            point_map
+        let closest = point_map
                 .iter()
                 .map(|p| (p,p.distance(*point)))
                 .filter(|p| p.1 != 0f64)
-                .min_by(|p1,p2| f64::total_cmp(&p1.1,&p2.1))
-                .unwrap();
-        relations.push((me, closest));
+                .map(|p| (me,(p.0,p.1)));
+        relations.extend(closest);
     }
 
     // sorted with closest at the bottom
