@@ -42,6 +42,9 @@ version = "0.1.0"
 [[package]]
 name = "day08"
 version = "0.1.0"
+dependencies = [
+ "lib",
+]
 
 [[package]]
 name = "day09"
@@ -55,6 +58,10 @@ checksum = "bbb1463b94567b1d22f0e07d13a70dcc25f39f88ad8cc197ecb978efddb9136e"
 dependencies = [
  "num",
 ]
+
+[[package]]
+name = "lib"
+version = "0.1.0"
 
 [[package]]
 name = "num"

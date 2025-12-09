@@ -9,7 +9,8 @@ pub struct Point
 
 impl Point
 {
-    pub fn distance(self, other:Point) -> i64
+    // distance without sqrt, good enough for comparisons
+    pub fn distance_cmp(self, other:Point) -> i64
     {
         (self.x - other.x).pow(2) + (self.y - other.y).pow(2) + (self.z - other.z).pow(2)
     }

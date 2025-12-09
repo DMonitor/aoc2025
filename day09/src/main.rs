@@ -1,3 +1,4 @@
+mod points;
 
 const INPUT: &str = include_str!("../res/test");
 
@@ -11,8 +12,6 @@ fn solve_1(input: &str) -> u32 {
 
 fn main()
 {
-
-
     println!("{}", solve_1(INPUT));
     println!("{}", solve_2(INPUT));
 }

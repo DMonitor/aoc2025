@@ -1,7 +1,5 @@
-mod points;
-
 use std::collections::{HashSet};
-use points::Point;
+use lib::points::Point;
 
 const INPUT: &str = include_str!("../res/input");
 
@@ -23,7 +21,7 @@ fn solve_2(input: &str) -> u64 {
         point_map.iter().map( |point|
             point_map
                 .iter()
-                .map(|p| (p,p.distance(*point)))
+                .map(|p| (p,p.distance_cmp(*point)))
                 .filter(|p| p.1 != 0)
                 .map(|p| (point.clone(),*p.0,p.1)).collect::<Vec<(Point, Point, i64)>>())
             .flatten().collect();
@@ -92,7 +90,7 @@ fn solve_1(input: &str) -> u64 {
         let me = point.clone();
         let closest = point_map
                 .iter()
-                .map(|p| (p,p.distance(*point)))
+                .map(|p| (p,p.distance_cmp(*point)))
                 .filter(|p| p.1 != 0)
                 .map(|p| (me,*p.0,p.1));
         relations.extend(closest);
