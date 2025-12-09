@@ -33,8 +33,8 @@ pub struct Point2D
 }
 
 impl Point2D {
-    pub fn area_rectangle(&self, other: &Point2D) -> i64 {
-        ((self.x-other.x + 1) * (self.y-other.y + 1)).abs()
+    pub fn area_rectangle(&self, other: &Point2D) -> u64 {
+        (i64::abs_diff(self.x,other.x) + 1) * (i64::abs_diff(self.y,other.y) + 1)
     }
 }
 
