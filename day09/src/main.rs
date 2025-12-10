@@ -2,8 +2,6 @@ use std::collections::{HashMap};
 use lib::points::{Point2D};
 use lib::space::{Space};
 
-use crate::Direction::{Ascending, Descending};
-
 const INPUT: &str = include_str!("../res/input");
 
 fn parse_file(input: &str) -> Vec<Point2D> {
@@ -15,62 +13,88 @@ fn parse_file(input: &str) -> Vec<Point2D> {
         .collect()
 }
 
-#[derive(PartialEq)]
-enum Direction {
-    Ascending,
-    Descending
-}
-
-
-fn get_direction(c1:i64, c2:i64) -> Direction
-{
-    if c1 > c2 {
-        return Ascending
-    }
-    Descending
-}
-
-fn compress_space(input_vec: &[i64]) -> HashMap<i64,usize>
-{
-    let mut workspace = input_vec.to_vec();
-    workspace.sort();
-    workspace.dedup();
-    workspace.iter().enumerate().map(|(i,x)| (*x,i) ).collect()
-}
-
 fn solve_2(input: &str) -> u64 {
 
     let points = parse_file(input);
 
-    let point_map = Point2D::compress2d(points.clone());
+    let (compressed_points,point_map) = Point2D::compress2d(points.clone());
 
     // we can probably skip this step by iterating through points and doing the point map lookup later on in the math
-    let compressed_points = points.iter().map( |p| *point_map.get(p).unwrap()).collect::<Vec<_>>();
+    //let compressed_points = points.iter().map( |p| *point_map.get(p).unwrap()).collect::<Vec<_>>();
+    //let compressed_points = points;
+
 
     let x_max = compressed_points.iter().map(|p| p.x).max().unwrap();
     let y_max = compressed_points.iter().map(|p| p.x).max().unwrap();
 
-    /*
-    for p in compressed_points.iter().enumerate() {
-        println!("{:?}", p);
-    }
-     */
-
-
     let mut pairs = compressed_points.iter().zip(compressed_points.iter().skip(1)).collect::<Vec<(&Point2D, &Point2D)>>();
-    pairs.push((compressed_points.first().unwrap(), compressed_points.last().unwrap()));
+    pairs.push((compressed_points.last().unwrap(),compressed_points.first().unwrap()));
 
-    let mut space = Space::<bool>::new(x_max as u64 + 1,y_max as u64 + 1, false);
-
-
+    let mut space = Space::<char>::new(x_max as u64 + 1,y_max as u64 + 1, '.');
 
     for pair in pairs {
-        space.draw_line_point(*pair.0, *pair.1, true);
+        space.draw_line_point(pair.0, pair.1, '#');
     }
 
-    println!("{}", space);
+    let mut midpoint = None;
+
+
+    // ray cast to find middle
+    for y in 0..y_max as u64 {
+        let mut state = 0;
+        for x in 0..x_max as u64 {
+            match state {
+                0 => {
+                    if space.get(x,y).unwrap() == '#' {
+                        state = 1;
+                    }
+                }
+                1 => {
+                    if space.get(x,y).unwrap() == '.' {
+                        midpoint = Some(Point2D { x: x as i64, y: y as i64});
+                        //println!("midpoint: {:?}",midpoint);
+                        break;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                _ => unreachable!()
+            }
+        }
+        if midpoint.is_some()
+        {
+            break;
+        }
+    }
+
+    space.flood_fill_point(&midpoint.unwrap(), '.', 'X');
+
+    for p in compressed_points.iter() {
+        space.set_point(p, '@');
+    }
+
+    // find rectangles like in part 1, except use the any_inside function
+    let mut areas = get_areas_p2(compressed_points.iter().collect());
+    areas.sort_by(|a,b| b.0.cmp(&a.0));
+
+    let winner = areas.iter().find(|(_, p1, p2)| !space.any_inside_points('.',p1,p2).unwrap());
+    if winner.is_none() {
+        println!("winner not found");
+        return 0;
+    }
+    let winner = winner.unwrap();
+
+    //println!("winner: {:?}",winner);
+
+    //println!("{}",space.get_rectangle_points(winner.1,winner.2).unwrap());
+    let real_winner_1 = point_map.get(winner.1).unwrap();
+    let real_winner_2 = point_map.get(winner.2).unwrap();
+    //println!("winner: ({},{})",real_winner_1,real_winner_2);
+    let real_area = real_winner_1.area_rectangle(&real_winner_2);
+    // 1343576598
     // 186362000 is too low
-    0
+    real_area
 }
 
 
@@ -81,23 +105,22 @@ fn test_space(input: &str)
     let x_max = points.iter().map(|p| p.x).max().unwrap();
     let y_max = points.iter().map(|p| p.y).max().unwrap();
 
-    let mut grid = Space::<bool>::new(14, 9, false);
-
-    for point in points.iter() {
-        grid.set_point(*point, true);
-    }
-
-
+    let mut grid = Space::<char>::new(14, 9, '.');
 
     let mut pairs = points.iter().zip(points.iter().skip(1)).collect::<Vec<(&Point2D, &Point2D)>>();
     pairs.push((points.first().unwrap(), points.last().unwrap()));
 
     for pair in pairs {
-        grid.draw_line_point(*pair.0, *pair.1, true);
+        grid.draw_line_point(pair.0, pair.1, '#');
     }
+    /*
+    for point in points.iter() {
+        grid.set_point(point, '@');
+    }
+    */
     println!("{}", grid);
 
-    grid.flood_fill(3,4, true);
+    grid.flood_fill(3,4, '.','X');
 
     println!("{}", grid);
 
@@ -114,6 +137,13 @@ fn get_areas(points1:Vec<&Point2D>, points2:Vec<&Point2D>) -> u64
     points1.iter().map(|p| {
         points2.iter().map(|p2| p.area_rectangle(&p2)).max().unwrap_or(0)
     }).max().unwrap_or(0)
+}
+
+fn get_areas_p2(points:Vec<&Point2D>) -> Vec<(u64,&Point2D, &Point2D)>
+{
+    points.iter().map(|p1| {
+        points.iter().map(|p2| (p1.area_rectangle(&p2), p1.clone(), p2.clone()))
+    }).flatten().collect::<Vec<_>>()
 }
 
 fn solve_1(input: &str) -> u64 {
@@ -151,6 +181,6 @@ fn solve_1(input: &str) -> u64 {
 fn main()
 {
     //test_space(INPUT);
-    //println!("{}", solve_1(INPUT));
+    println!("{}", solve_1(INPUT));
     println!("{}", solve_2(INPUT));
 }
