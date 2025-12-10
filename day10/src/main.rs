@@ -1,15 +1,17 @@
 use regex::{Regex, RegexBuilder};
-const INPUT: &str = include_str!("../res/test");
+use itertools::Itertools;
+
+const INPUT: &str = include_str!("../res/input");
 
 
 struct ButtonSet {
-    lights:Vec<bool>,
+    lights:u32,
     buttons: Vec<Vec<u32>>,
     jolts: Vec<u32>,
 }
 
 
-fn parse_input(file:&str) -> (Vec<ButtonSet>)
+fn parse_input(file:&str) -> Vec<ButtonSet>
 {
     let line_parse = Regex::new(r"\[([.#]+)] ((?:\([0-9,]+\)\s?)+)\{([0-9,]+)}").unwrap();
 
@@ -27,11 +29,11 @@ fn parse_input(file:&str) -> (Vec<ButtonSet>)
 
         let light_pattern = line.get(1).unwrap().as_str();
 
-        let lights = light_pattern.chars().map(|c| match c {
-            '.' => false,
-            '#' => true,
+        let lights = light_pattern.chars().enumerate().fold(0u32,|acc, (i,c)| match c {
+            '.' => acc,
+            '#' => acc | (1 << i),
             _ => unreachable!()
-        }).collect::<Vec<_>>();
+        });
 
         let button_pattern = line.get(2).unwrap().as_str()
             .replace('(',"")
@@ -57,14 +59,40 @@ fn solve_2(input: &str) -> u32 {
 fn solve_1(input: &str) -> u32 {
     let button_sets = parse_input(input);
 
+
+    let mut answer = 0;
+    // get all the combinations of button presses, sort by smallest, find first that results in pattern
     for set in button_sets {
-        println!("{:?}", set.lights);
-        println!("{:?}", set.buttons);
+        let final_lights = set.lights;
+        // make each button a bit mask
+        let masks = set.buttons.iter().map(|b| {
+            b.iter().fold(0u32, |acc,b| acc | (1u32 << b) )
+        }).collect::<Vec<_>>();
+        let mut solution:Option<Vec<&u32>> = None;
+        for i in 1..=masks.len() {
+            let c = masks.iter().combinations(i);
+            for a in c {
+                let mut current_lights = 0u32;
+                for press in a.iter() {
+                    current_lights = current_lights ^ **press;
+                }
+                if current_lights == final_lights {
+                    solution = Some(a);
+                    break;
+                }
+            }
+            if solution.is_some() {
+                break;
+            }
+        }
+        let solution = solution.unwrap();
+        println!("solution: {:?} {}", solution, solution.len());
+        answer += solution.len() as u32;
     }
 
 
 
-    0
+    answer
 }
 
 fn main()
