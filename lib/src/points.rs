@@ -39,7 +39,8 @@ impl Point2D {
     }
 
 
-    pub fn compress2d(points: Vec<Point2D>) -> HashMap<Point2D,Point2D>
+    // returns compressed point space (retaining order) and mapping from compressed to real space
+    pub fn compress2d(points: Vec<Point2D>) -> (Vec<Point2D>,HashMap<Point2D,Point2D>)
     {
         fn compress_space(input_vec: Vec<i64>) -> HashMap<i64,usize>
         {
@@ -51,8 +52,11 @@ impl Point2D {
 
         let x_map = compress_space(points.iter().map(|p| p.x).collect::<Vec<_>>());
         let y_map = compress_space(points.iter().map(|p| p.y).collect::<Vec<_>>());
-        points.iter().map( |p| (*p,Point2D { x: *x_map.get(&p.x).unwrap() as i64, y:*y_map.get(&p.y).unwrap() as i64})).collect::<HashMap<_,_>>()
+        let mapping = points.iter().map( |p| (Point2D { x: *x_map.get(&p.x).unwrap() as i64, y:*y_map.get(&p.y).unwrap() as i64},*p)).collect::<HashMap<_,_>>();
 
+        let compressed_points = points.iter().map( |p| Point2D { x: *x_map.get(&p.x).unwrap() as i64, y:*y_map.get(&p.y).unwrap() as i64}).collect::<Vec<_>>();
+
+        (compressed_points,mapping)
     }
 }
 
