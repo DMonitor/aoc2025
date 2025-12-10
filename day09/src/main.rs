@@ -1,4 +1,3 @@
-use std::collections::{HashMap};
 use lib::points::{Point2D};
 use lib::space::{Space};
 
@@ -97,41 +96,6 @@ fn solve_2(input: &str) -> u64 {
     real_area
 }
 
-
-fn test_space(input: &str)
-{
-    let points = parse_file(input);
-
-    let x_max = points.iter().map(|p| p.x).max().unwrap();
-    let y_max = points.iter().map(|p| p.y).max().unwrap();
-
-    let mut grid = Space::<char>::new(14, 9, '.');
-
-    let mut pairs = points.iter().zip(points.iter().skip(1)).collect::<Vec<(&Point2D, &Point2D)>>();
-    pairs.push((points.first().unwrap(), points.last().unwrap()));
-
-    for pair in pairs {
-        grid.draw_line_point(pair.0, pair.1, '#');
-    }
-    /*
-    for point in points.iter() {
-        grid.set_point(point, '@');
-    }
-    */
-    println!("{}", grid);
-
-    grid.flood_fill(3,4, '.','X');
-
-    println!("{}", grid);
-
-}
-
-fn get_max_area(point1:&Point2D, points:Vec<&Point2D>) -> u64
-{
-    points.iter().map(|p2| point1.area_rectangle(&p2)).max().unwrap_or(0)
-
-}
-
 fn get_areas(points1:Vec<&Point2D>, points2:Vec<&Point2D>) -> u64
 {
     points1.iter().map(|p| {
@@ -142,7 +106,7 @@ fn get_areas(points1:Vec<&Point2D>, points2:Vec<&Point2D>) -> u64
 fn get_areas_p2(points:Vec<&Point2D>) -> Vec<(u64,&Point2D, &Point2D)>
 {
     points.iter().map(|p1| {
-        points.iter().map(|p2| (p1.area_rectangle(&p2), p1.clone(), p2.clone()))
+        points.iter().map(|p2| (p1.area_rectangle(&p2), *p1, *p2))
     }).flatten().collect::<Vec<_>>()
 }
 
@@ -180,7 +144,6 @@ fn solve_1(input: &str) -> u64 {
 
 fn main()
 {
-    //test_space(INPUT);
     println!("{}", solve_1(INPUT));
     println!("{}", solve_2(INPUT));
 }

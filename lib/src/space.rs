@@ -1,7 +1,6 @@
 use std::collections::VecDeque;
 use std::fmt::{Display, Formatter};
 use crate::points::Point2D;
-use crate::space;
 
 pub struct Space<T>
 {
@@ -21,10 +20,10 @@ impl<T: Copy + PartialEq > Space<T> {
     pub fn y(&self) -> u64 { self.y_bound }
 
     pub fn set(&mut self, x:u64, y:u64, value:T) -> Option<bool> {
-        if(x > self.x_bound) {
+        if x > self.x_bound {
             return None;
         }
-        if(y > self.y_bound) {
+        if y > self.y_bound {
             return None;
         }
         let ret = self.space[(self.x_bound * y + x) as usize] != value;
@@ -33,10 +32,10 @@ impl<T: Copy + PartialEq > Space<T> {
     }
 
     pub fn get(&self, x:u64, y:u64) -> Option<T> {
-        if(x >= self.x_bound) {
+        if x >= self.x_bound {
             return None;
         }
-        if(y >= self.y_bound) {
+        if y >= self.y_bound {
             return None;
         }
         Some(self.space[(self.x_bound * y + x) as usize])
@@ -47,7 +46,7 @@ impl<T: Copy + PartialEq > Space<T> {
     }
 
     pub fn draw_line(&mut self, x1:u64, y1:u64, x2:u64, y2:u64, value: T) {
-        if(x1 != x2 && y1 != y2) {
+        if x1 != x2 && y1 != y2 {
             panic!("({},{}) to ({},{}): Not a straight line",x1,y1,x2,y2);
         }
 
