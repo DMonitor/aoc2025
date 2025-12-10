@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 #[derive(PartialEq,Eq,Hash,Debug,Copy,Clone)]
 pub struct Point3D
@@ -35,6 +36,23 @@ pub struct Point2D
 impl Point2D {
     pub fn area_rectangle(&self, other: &Point2D) -> u64 {
         (i64::abs_diff(self.x,other.x) + 1) * (i64::abs_diff(self.y,other.y) + 1)
+    }
+
+
+    pub fn compress2d(points: Vec<Point2D>) -> HashMap<Point2D,Point2D>
+    {
+        fn compress_space(input_vec: Vec<i64>) -> HashMap<i64,usize>
+        {
+            let mut workspace = input_vec;
+            workspace.sort();
+            workspace.dedup();
+            workspace.iter().enumerate().map(|(i,x)| (*x,i) ).collect()
+        }
+
+        let x_map = compress_space(points.iter().map(|p| p.x).collect::<Vec<_>>());
+        let y_map = compress_space(points.iter().map(|p| p.y).collect::<Vec<_>>());
+        points.iter().map( |p| (*p,Point2D { x: *x_map.get(&p.x).unwrap() as i64, y:*y_map.get(&p.y).unwrap() as i64})).collect::<HashMap<_,_>>()
+
     }
 }
 
