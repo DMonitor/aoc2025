@@ -68,13 +68,32 @@ impl<T: Copy + PartialEq > Space<T> {
     {
         self.draw_line(p1.x as u64,p1.y as u64,p2.x as u64,p2.y as u64, value);
     }
-
-    pub fn flood_fill(&mut self, x:u64, y:u64) {
-
+    pub fn flood_fill(&mut self, x:u64, y:u64, value:T)
+    {
+        if(self.get(x,y) == Some(value)) {
+            return;
+        }
+        self.set(x,y,value);
+        if(self.get(x+1,y) != Some(value))
+        {
+            self.flood_fill(x+1,y,value);
+        }
+        if(self.get(x-1,y) != Some(value))
+        {
+            self.flood_fill(x-1,y,value);
+        }
+        if(self.get(x,y+1) != Some(value))
+        {
+            self.flood_fill(x,y+1,value);
+        }
+        if(self.get(x,y-1) != Some(value))
+        {
+            self.flood_fill(x,y-1,value);
+        }
     }
 
-    pub fn flood_fill_point(&mut self, point:Point2D) {
-        Space::flood_fill(self, point.x as u64, point.y as u64);
+    pub fn flood_fill_point(&mut self, point:Point2D, value:T) {
+        Space::flood_fill(self, point.x as u64, point.y as u64, value);
     }
 }
 
