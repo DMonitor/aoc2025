@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::fmt::{Display, Formatter};
 use crate::points::Point2D;
 
@@ -31,10 +32,10 @@ impl<T: Copy + PartialEq > Space<T> {
     }
 
     pub fn get(&self, x:u64, y:u64) -> Option<T> {
-        if(x > self.x_bound) {
+        if(x >= self.x_bound) {
             return None;
         }
-        if(y > self.y_bound) {
+        if(y >= self.y_bound) {
             return None;
         }
         Some(self.space[(self.x_bound * y + x) as usize])
@@ -68,32 +69,39 @@ impl<T: Copy + PartialEq > Space<T> {
     {
         self.draw_line(p1.x as u64,p1.y as u64,p2.x as u64,p2.y as u64, value);
     }
-    pub fn flood_fill(&mut self, x:u64, y:u64, value:T)
+
+    pub fn flood_fill(&mut self, x:u64, y:u64, replace:T, value:T)
     {
-        if(self.get(x,y) == Some(value)) {
-            return;
-        }
-        self.set(x,y,value);
-        if(self.get(x+1,y) != Some(value))
-        {
-            self.flood_fill(x+1,y,value);
-        }
-        if(self.get(x-1,y) != Some(value))
-        {
-            self.flood_fill(x-1,y,value);
-        }
-        if(self.get(x,y+1) != Some(value))
-        {
-            self.flood_fill(x,y+1,value);
-        }
-        if(self.get(x,y-1) != Some(value))
-        {
-            self.flood_fill(x,y-1,value);
+        let mut queue = VecDeque::<(u64,u64)>::new();
+        queue.push_back((x,y));
+
+        while !queue.is_empty() {
+            let (x,y) = queue.pop_front().unwrap();
+            if self.get(x, y) != Some(replace) {
+                continue;
+            }
+            self.set(x,y,value);
+            if self.get(x+1, y) == Some(replace)
+            {
+                queue.push_back((x+1,y));
+            }
+            if x!= 0 && self.get(x-1, y) == Some(replace)
+            {
+                queue.push_back((x-1,y));
+            }
+            if self.get(x, y+1) == Some(replace)
+            {
+                queue.push_back((x,y+1));
+            }
+            if y!=0 && self.get(x, y-1) == Some(replace)
+            {
+                queue.push_back((x,y-1));
+            }
         }
     }
 
-    pub fn flood_fill_point(&mut self, point:Point2D, value:T) {
-        Space::flood_fill(self, point.x as u64, point.y as u64, value);
+    pub fn flood_fill_point(&mut self, point:Point2D, replace:T, value:T) {
+        Space::flood_fill(self, point.x as u64, point.y as u64, replace, value);
     }
 }
 
@@ -109,6 +117,22 @@ impl Display for Space<bool> {
                     None => (),
                 }
                // s.push(' ');
+            }
+            s.push('\n');
+        }
+        write!(f, "{}", s)
+    }
+}
+
+
+impl Display for Space<char> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut s = String::new();
+        for y in 0..self.y_bound {
+            for x in 0..self.x_bound {
+                //s.push(' ');
+                s.push(self.get(x,y).unwrap())
+                // s.push(' ');
             }
             s.push('\n');
         }
