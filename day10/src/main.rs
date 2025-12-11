@@ -1,8 +1,10 @@
-use regex::{Regex, RegexBuilder};
+use regex::Regex;
 use itertools::Itertools;
 use z3;
+use z3::ast::Int;
+use z3::ast::Bool;
 
-const INPUT: &str = include_str!("../res/test");
+const INPUT: &str = include_str!("../res/input");
 
 
 struct ButtonSet {
@@ -53,50 +55,64 @@ fn parse_input(file:&str) -> Vec<ButtonSet>
         result.push(ButtonSet { lights, buttons, jolts})
     }
 
-    (result)
+    result
 
 
 }
 
-fn press_button(jolts:&mut Vec<u32>, button:Vec<u32>, times:u32) -> &Vec<u32>{
-    for b in button {
-        jolts[b as usize] += times;
-    }
-    jolts
-}
-
-fn solve_2(input: &str) -> u32 {
+fn solve_2(input: &str) -> u64 {
     let button_sets = parse_input(input);
     let mut answer = 0;
 
     for set in button_sets {
 
-        // track how many times buttons have been pressed
-        let presses:Vec<z3::ast::Int> = (0..set.buttons.len()).map(|i|
-            z3::ast::Int::new_const(format!("button{}", i).as_str())).collect();
+        // track how many times each button has been pressed
+        let presses:Vec<Int> = (0..set.buttons.len()).map(|i|
+            Int::new_const(format!("button{}", i).as_str())).collect();
 
-        let array = z3::ast::Array::new_const("a", &z3::Sort::int(), &z3::Sort::int());
-        println!("{:?}",array);
+        // track total number of presses
+        let press_total =  presses.iter().fold(Int::from_i64(0), |i,p| i + p);
+        let mut jolts_resolved:Vec<Bool> = vec!();
 
-        let solver = z3::Solver::new();
 
-        let mut jolts = vec![0; set.jolts.len()];
-        let final_jolts = set.jolts;
+        for light in 0..set.jolts.len() {
+            let mut b:Vec<Int> = vec!();
+            for (button_index,button) in set.buttons.iter().enumerate()
+            {
+                // if a button effects a light, track it
+                if button.contains(&(light as u32)) {
+                    b.push(presses[button_index].clone());
+                }
+            }
 
-        press_button(&mut jolts, vec!(3),1);
+            // the total jolts equals the number of times relevant buttons have been pressed
+            let j_total =  b.iter().fold(Int::from_i64(0), |i,b| i + b);
+            jolts_resolved.push(j_total.eq(set.jolts[light]));
+        }
 
-        press_button(&mut jolts, vec!(1,3),3);
 
-        press_button(&mut jolts, vec!(2,3),3);
+        let solver = z3::Optimize::new();
 
-        press_button(&mut jolts, vec!(0,2),1);
 
-        press_button(&mut jolts, vec!(0,1),2);
+        jolts_resolved.iter().for_each(|j| solver.assert(j));
 
-        println!("{} {:?}",jolts==final_jolts, jolts);
+        // negative solutions not allowed
+        presses.iter().for_each(|p| solver.assert(&p.ge(0)));
+
+
+        solver.minimize(&press_total);
+
+        let b = Bool::new_const(".");
+        solver.check(&[b]);
+        let model = solver.get_model().unwrap();
+
+        for button in presses
+        {
+            answer += model.get_const_interp(&button).unwrap().as_u64().unwrap();
+        }
     }
 
-    0
+    answer
 }
 
 fn solve_1(input: &str) -> u32 {
@@ -128,11 +144,9 @@ fn solve_1(input: &str) -> u32 {
             }
         }
         let solution = solution.unwrap();
-        println!("solution: {:?} {}", solution, solution.len());
+        //println!("solution: {:?} {}", solution, solution.len());
         answer += solution.len() as u32;
     }
-
-
 
     answer
 }
