@@ -1,7 +1,8 @@
 use regex::{Regex, RegexBuilder};
 use itertools::Itertools;
+use z3;
 
-const INPUT: &str = include_str!("../res/input");
+const INPUT: &str = include_str!("../res/test");
 
 
 struct ButtonSet {
@@ -44,7 +45,12 @@ fn parse_input(file:&str) -> Vec<ButtonSet>
                 .map(|s| s.parse::<u32>().unwrap())
                 .collect::<Vec<_>>()).collect::<Vec<_>>();
 
-        result.push(ButtonSet { lights, buttons, jolts:vec!()})
+
+        let jolts_pattern = line.get(3).unwrap().as_str();
+        let jolts = jolts_pattern.split_terminator(',')
+                .map(|s| s.parse::<u32>().unwrap())
+                .collect::<Vec<_>>();
+        result.push(ButtonSet { lights, buttons, jolts})
     }
 
     (result)
@@ -52,13 +58,49 @@ fn parse_input(file:&str) -> Vec<ButtonSet>
 
 }
 
+fn press_button(jolts:&mut Vec<u32>, button:Vec<u32>, times:u32) -> &Vec<u32>{
+    for b in button {
+        jolts[b as usize] += times;
+    }
+    jolts
+}
+
 fn solve_2(input: &str) -> u32 {
+    let button_sets = parse_input(input);
+    let mut answer = 0;
+
+    for set in button_sets {
+
+        // track how many times buttons have been pressed
+        let presses:Vec<z3::ast::Int> = (0..set.buttons.len()).map(|i|
+            z3::ast::Int::new_const(format!("button{}", i).as_str())).collect();
+
+        let array = z3::ast::Array::new_const("a", &z3::Sort::int(), &z3::Sort::int());
+        println!("{:?}",array);
+
+        let solver = z3::Solver::new();
+
+        let mut jolts = vec![0; set.jolts.len()];
+        let final_jolts = set.jolts;
+
+        press_button(&mut jolts, vec!(3),1);
+
+        press_button(&mut jolts, vec!(1,3),3);
+
+        press_button(&mut jolts, vec!(2,3),3);
+
+        press_button(&mut jolts, vec!(0,2),1);
+
+        press_button(&mut jolts, vec!(0,1),2);
+
+        println!("{} {:?}",jolts==final_jolts, jolts);
+    }
+
     0
 }
 
 fn solve_1(input: &str) -> u32 {
     let button_sets = parse_input(input);
-
 
     let mut answer = 0;
     // get all the combinations of button presses, sort by smallest, find first that results in pattern

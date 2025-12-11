@@ -7,3 +7,4 @@ edition = "2021"
 itertools = "0.14.0"
 lib = {path = "../lib" }
 regex = "1.12.2"
+z3 = "0.19.6"
